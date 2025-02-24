@@ -15,7 +15,8 @@
 
 typedef enum {
     ImuMadgwick = 1,
-    ImuMahony   = 2
+    ImuMahony   = 2,
+    ImuComplementaryFilter = 3,
 }ImuMethod;
 
 typedef enum {
@@ -93,7 +94,6 @@ typedef struct ImuQuaternion_ {
 typedef struct Imu_ Imu;
     
 struct Imu_ {
-    char bus_name[8];
     volatile ImuState state;
     ImuMethod method;           // 滤波方法
     ImuSource source;           // 源数据
@@ -108,6 +108,7 @@ struct Imu_ {
     int32_t samp_freq;          // 采样频率
     float kp_gain;              // 比例增益 Kp
     float ki_gain;              // Ki for mahony, beta for madgwick
+    float comple_filter_alpha;  // 互补滤波算法系数， 即陀螺仪权重
     void (*read_source)(Imu *imu);
     volatile int32_t calibrate_count;
 };
@@ -118,4 +119,5 @@ void Imu_SetZero(Imu *imu);
 void Imu_Update(Imu *imu);
 void Imu_InitCalibrate(Imu *imu);
 void Imu_Calibrate(Imu *imu);
+void ImuComplementaryFilter_AlgorithmUpdate(Imu *imu);
 #endif

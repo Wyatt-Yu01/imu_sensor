@@ -33,7 +33,6 @@ static void Imu_ConvertEuler(Imu *imu)
     imu->euler_degree.yaw = imu->euler.yaw * 180 / MATH_PI;
 }
 
-
 static void Imu_ConvertQuatToEuler(Imu *imu)
 {
     imu->raw_euler.roll = atan2(2 * (imu->quaternion.q0 * imu->quaternion.q1 + imu->quaternion.q2 * imu->quaternion.q3), \
@@ -70,6 +69,10 @@ void Imu_Update(Imu *imu)
     else if (ImuMahony == imu->method)
     {
         ImuMahony_AlgorithmUpdate(imu);
+    }
+    else if (ImuComplementaryFilter == imu->method)
+    {
+        ImuComplementaryFilter_AlgorithmUpdate(imu);
     }
     else
     {
@@ -110,13 +113,11 @@ void Imu_Calibrate(Imu *imu)
         imu->src_bias.magic.x /= (IMU_CALIBRATE_TIMES * 1.0);
         imu->src_bias.magic.y /= (IMU_CALIBRATE_TIMES * 1.0);
         imu->src_bias.magic.z /= (IMU_CALIBRATE_TIMES * 1.0);
-        rt_kprintf("offset: %f %f %f %f %f %f %f %f %f\n", imu->src_bias.accel.x, \
+        printf("offset: %f %f %f %f %f %f %f %f %f\n", imu->src_bias.accel.x, \
                 imu->src_bias.accel.y, imu->src_bias.accel.z, \
                 imu->src_bias.gyro.x, imu->src_bias.gyro.y, \
                 imu->src_bias.gyro.z, imu->src_bias.magic.x, \
                 imu->src_bias.magic.y, imu->src_bias.magic.z);
         imu->state = ImuStateRuning;
     }
-    
-    
 }
