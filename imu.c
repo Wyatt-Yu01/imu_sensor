@@ -4,33 +4,34 @@
  * @brief IMU 应用程序
  * @copyright Copyright (c) 2025
  */
+#include <string.h>
 #include "imu.h"
 
 #define DBG_SECTION_NAME "imu"
 #define DBG_COLOR
-#define DBG_LEVEL DBG_INFO
+#define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
 
-#define IMU_CALIBRATE_TIMES     1000
+#define print(...)             rt_kprintf(__VA_ARGS__)
 
-static inline float_t Imu_NormalizeAngle(float_t angle)
+static inline double Imu_NormalizeAngle(float_t angle)
 {
     return (angle > MATH_PI) ? angle - MATH_2PI : (angle < -MATH_PI) ? angle + MATH_2PI : angle;
 }
 
 static void Imu_ConvertEuler(Imu *imu)
 {
-    imu->raw_euler_degree.roll  = imu->raw_euler.roll * 180 / MATH_PI;
-    imu->raw_euler_degree.pitch = imu->raw_euler.pitch * 180 / MATH_PI;
-    imu->raw_euler_degree.yaw   = imu->raw_euler.yaw * 180 / MATH_PI;
+    imu->raw_euler_degree.roll  = (float)imu->raw_euler.roll * 180 / MATH_PI;
+    imu->raw_euler_degree.pitch = (float)imu->raw_euler.pitch * 180 / MATH_PI;
+    imu->raw_euler_degree.yaw   = (float)imu->raw_euler.yaw * 180 / MATH_PI;
 
-    imu->euler.pitch = Imu_NormalizeAngle(imu->raw_euler.pitch - imu->zero_euler.pitch);
-    imu->euler.roll = Imu_NormalizeAngle(imu->raw_euler.roll - imu->zero_euler.roll);
-    imu->euler.yaw = Imu_NormalizeAngle(imu->raw_euler.yaw - imu->zero_euler.yaw);
+    imu->euler.pitch = (float)Imu_NormalizeAngle(imu->raw_euler.pitch - imu->zero_euler.pitch);
+    imu->euler.roll = (float)Imu_NormalizeAngle(imu->raw_euler.roll - imu->zero_euler.roll);
+    imu->euler.yaw = (float)Imu_NormalizeAngle(imu->raw_euler.yaw - imu->zero_euler.yaw);
 
-    imu->euler_degree.roll = imu->euler.roll * 180 / MATH_PI;
-    imu->euler_degree.pitch = imu->euler.pitch * 180 / MATH_PI;
-    imu->euler_degree.yaw = imu->euler.yaw * 180 / MATH_PI;
+    imu->euler_degree.roll = (float)(imu->euler.roll * 180 / MATH_PI);
+    imu->euler_degree.pitch = (float)(imu->euler.pitch * 180 / MATH_PI);
+    imu->euler_degree.yaw = (float)(imu->euler.yaw * 180 / MATH_PI);
 }
 
 static void Imu_ConvertQuatToEuler(Imu *imu)
@@ -52,72 +53,134 @@ void Imu_SetZero(Imu *imu)
 void Imu_Update(Imu *imu)
 {
     // read source
-    imu->source.accel.x -= imu->src_bias.accel.x;
-    imu->source.accel.y -= imu->src_bias.accel.y;
-    imu->source.accel.z -= imu->src_bias.accel.z;
-    imu->source.gyro.x  -= imu->src_bias.gyro.x;
-    imu->source.gyro.y  -= imu->src_bias.gyro.y;
-    imu->source.gyro.z  -= imu->src_bias.gyro.z;
-    imu->source.magic.x -= imu->src_bias.magic.x;
-    imu->source.magic.y -= imu->src_bias.magic.y;
-    imu->source.magic.z -= imu->src_bias.magic.z;
-
+    imu->source.accel.x = imu->bias.accel_s.x * (imu->source.accel.x - imu->bias.accel_offset.x);
+    imu->source.accel.y = imu->bias.accel_s.y * (imu->source.accel.y - imu->bias.accel_offset.y);
+    imu->source.accel.z = imu->bias.accel_s.z * (imu->source.accel.z - imu->bias.accel_offset.z);
+    imu->source.gyro.x  -= imu->bias.gyro.x;
+    imu->source.gyro.y  -= imu->bias.gyro.y;
+    imu->source.gyro.z  -= imu->bias.gyro.z;
+    imu->source.magic.x -= imu->bias.magic.x;
+    imu->source.magic.y -= imu->bias.magic.y;
+    imu->source.magic.z -= imu->bias.magic.z;
     if (ImuMadgwick == imu->method)
     {
         ImuMadgwick_AlgorithmUpdate(imu);
-    }
+            }
     else if (ImuMahony == imu->method)
     {
         ImuMahony_AlgorithmUpdate(imu);
-    }
+            }
     else if (ImuComplementaryFilter == imu->method)
     {
         ImuComplementaryFilter_AlgorithmUpdate(imu);
     }
     else
     {
-        //
+        // do nothing
     }
+
     Imu_ConvertQuatToEuler(imu);
     Imu_ConvertEuler(imu);
 }
 
 void Imu_InitCalibrate(Imu *imu)
 {
-    memset(imu->src_bias, 0, sizeof(ImuSource));
+    memset((void *)&imu->bias, 0, sizeof(ImuCalib));
     imu->calibrate_count = 0;
-    imu->src_bias.use_magic = imu->source.use_magic;
     imu->state = ImuStateCalib;
+}
+
+void Imu_CalibrateGyro(Imu *imu)
+{
+    if (imu->calibrate_count < IMU_CALIBRATE_TIMES)
+    {
+        imu->bias.gyro.x  += imu->source.gyro.x;
+        imu->bias.gyro.y  += imu->source.gyro.y;
+        imu->bias.gyro.z  += imu->source.gyro.z;
+    }
+    else if (imu->calibrate_count == IMU_CALIBRATE_TIMES)
+    {
+        imu->bias.gyro.x  /= IMU_CALIBRATE_TIMES;
+        imu->bias.gyro.y  /= IMU_CALIBRATE_TIMES;
+        imu->bias.gyro.z  /= IMU_CALIBRATE_TIMES;
+    }
+}
+
+void Imu_CalibrateMagic(Imu *imu)
+{
+    // TODO
+}
+
+// IMU 误差模型 Ameas = S * (Atrue + OFFSET)
+void Imu_CalibrateAccelBias(Imu3Axes *src, int32_t samples, Imu3Axes *bias)
+{
+    Imu3Axes sum = {0.0, 0.0, 0.0};
+    for (int32_t i = 0; i < samples; i++)
+    {
+        sum.x += src[i].x;
+        sum.y += src[i].y;
+        sum.z += src[i].z;
+    }
+
+    bias->x = sum.x / samples;
+    bias->y = sum.y / samples;
+    bias->z = sum.z / samples - GRAVITY;
+}
+
+void Imu_CalibrateAccelScale(Imu3Axes *src, int32_t samples, Imu3Axes *scale)
+{
+    Imu3Axes sum = {0.0, 0.0, 0.0};
+    for (int32_t i = 0; i < samples; i++)
+    {
+        sum.x += src[i].x * src[i].x;
+        sum.y += src[i].y * src[i].y;
+        sum.z += src[i].z * src[i].z;
+    }
+
+    float norm = sqrt(sum.x + sum.y + sum.z);
+    scale->x = GRAVITY * GRAVITY / (sqrt(sum.x / samples) * norm);
+    scale->y = GRAVITY * GRAVITY / (sqrt(sum.y / samples) * norm);
+    scale->z = GRAVITY * GRAVITY / (sqrt(sum.z / samples) * norm);
+}
+
+void Imu_CalibrateAccel(Imu *imu)
+{
+    if (imu->calibrate_count == 0)
+    {
+        // do nothing
+    }
+
+    if (imu->calibrate_count < IMU_CALIBRATE_TIMES) // in case of overflow
+    {
+        imu->bias.acc_src[imu->calibrate_count].x = imu->source.accel.x;
+        imu->bias.acc_src[imu->calibrate_count].y = imu->source.accel.y;
+        imu->bias.acc_src[imu->calibrate_count].z = imu->source.accel.z;
+    }
+    else if (imu->calibrate_count == IMU_CALIBRATE_TIMES)
+    {
+        Imu_CalibrateAccelBias(imu->bias.acc_src, IMU_CALIBRATE_TIMES, &imu->bias.accel_offset);
+        Imu_CalibrateAccelScale(imu->bias.acc_src, IMU_CALIBRATE_TIMES, &imu->bias.accel_s);
+    }
 }
 
 void Imu_Calibrate(Imu *imu)
 {
-    imu->src_bias.accel.x += imu->source.accel.x;
-    imu->src_bias.accel.y += imu->source.accel.y;
-    imu->src_bias.accel.z += imu->source.accel.z;
-    imu->src_bias.gyro.x  += imu->source.gyro.x;
-    imu->src_bias.gyro.y  += imu->source.gyro.y;
-    imu->src_bias.gyro.z  += imu->source.gyro.z;
-    imu->src_bias.magic.x += imu->source.magic.x;
-    imu->src_bias.magic.y += imu->source.magic.y;
-    imu->src_bias.magic.z += imu->source.magic.z;
-    imu->calibrate_count++;
-    if (imu->calibrate_count >= IMU_CALIBRATE_TIMES)
+// TODO   Imu_CalibrateAccel(imu);
+    Imu_CalibrateGyro(imu);
+    if (imu->source.use_magic == true)
     {
-        imu->src_bias.accel.x /= (IMU_CALIBRATE_TIMES * 1.0);
-        imu->src_bias.accel.y /= (IMU_CALIBRATE_TIMES * 1.0);
-        imu->src_bias.accel.z /= (IMU_CALIBRATE_TIMES * 1.0);
-        imu->src_bias.gyro.x  /= (IMU_CALIBRATE_TIMES * 1.0);
-        imu->src_bias.gyro.y  /= (IMU_CALIBRATE_TIMES * 1.0);
-        imu->src_bias.gyro.z  /= (IMU_CALIBRATE_TIMES * 1.0);
-        imu->src_bias.magic.x /= (IMU_CALIBRATE_TIMES * 1.0);
-        imu->src_bias.magic.y /= (IMU_CALIBRATE_TIMES * 1.0);
-        imu->src_bias.magic.z /= (IMU_CALIBRATE_TIMES * 1.0);
-        printf("offset: %f %f %f %f %f %f %f %f %f\n", imu->src_bias.accel.x, \
-                imu->src_bias.accel.y, imu->src_bias.accel.z, \
-                imu->src_bias.gyro.x, imu->src_bias.gyro.y, \
-                imu->src_bias.gyro.z, imu->src_bias.magic.x, \
-                imu->src_bias.magic.y, imu->src_bias.magic.z);
-        imu->state = ImuStateRuning;
+        Imu_CalibrateMagic(imu);
+    }
+    
+    imu->calibrate_count++;
+    
+    if (imu->calibrate_count > IMU_CALIBRATE_TIMES) // wait one tick for caculate results
+    {
+        imu->calibrate_count = 0;
+        imu->state = ImuStateStart;
+        LOG_D("Calibrate results: \n accel_bias: %f, %f, %f\n accel_scale: %f, %f, %f\n, gyro: %f, %f, %f", \
+                imu->bias.accel_offset.x, imu->bias.accel_offset.y, imu->bias.accel_offset.z, \
+                imu->bias.accel_s.x, imu->bias.accel_s.y, imu->bias.accel_s.z, \
+                imu->bias.gyro.x, imu->bias.gyro.y, imu->bias.gyro.z);
     }
 }

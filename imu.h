@@ -13,6 +13,11 @@
 #include "rtdevice.h"
 #include "app_common.h"
 
+#define GRAVITY                 (9.81)
+#define DEGREE2RAD(x)           ((x) * MATH_PI / 180.0)
+#define RAD2DEGREE(x)           ((x) * 180.0 / MATH_PI)
+#define IMU_CALIBRATE_TIMES     200
+
 typedef enum {
     ImuMadgwick = 1,
     ImuMahony   = 2,
@@ -72,9 +77,9 @@ typedef struct ImuConfig_ {
 }ImuConfig;
 
 typedef struct ImuSource_ {
-    Imu3Axes accel;
-    Imu3Axes gyro;
-    Imu3Axes magic;
+    Imu3Axes accel;         // m/s2
+    Imu3Axes gyro;          // rad/s
+    Imu3Axes magic;         // Gauss
     bool use_magic;
 }ImuSource;
 
@@ -91,13 +96,21 @@ typedef struct ImuQuaternion_ {
     volatile float q3;
 }ImuQuaternion;
 
+// Ameas = S * (Atrue + OFFSET), 静止条件下最小二乘法校准参数
+typedef struct ImuCalib_ {
+    Imu3Axes acc_src[IMU_CALIBRATE_TIMES];
+    Imu3Axes accel_s;
+    Imu3Axes accel_offset;
+    Imu3Axes gyro;          // rad/s
+    Imu3Axes magic;         // Gauss
+}ImuCalib;
+
 typedef struct Imu_ Imu;
-    
 struct Imu_ {
     volatile ImuState state;
     ImuMethod method;           // 滤波方法
     ImuSource source;           // 源数据
-    ImuSource src_bias;          // 初始值校准
+    ImuCalib bias;          //初始值校准
     ImuConfig imu_config;       // 芯片配置项
     ImuQuaternion quaternion;   // 四元数
     ImuEuler raw_euler;         // 欧拉角 rad
@@ -120,4 +133,5 @@ void Imu_Update(Imu *imu);
 void Imu_InitCalibrate(Imu *imu);
 void Imu_Calibrate(Imu *imu);
 void ImuComplementaryFilter_AlgorithmUpdate(Imu *imu);
+
 #endif

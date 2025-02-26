@@ -7,6 +7,8 @@ src = Glob('*.c')
 src += Glob("qmc5883l/qmc5883l.c")
 src += Glob("algorithm/imu_madgwick.c")
 src += Glob("algorithm/imu_mahony.c")
+src += Glob("algorithm/imu_complementary_filter.c")
+
 
 CPPPATH = [cwd]
 CPPPATH += [cwd + "/qmc5883l"]

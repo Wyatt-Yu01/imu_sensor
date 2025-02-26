@@ -115,26 +115,30 @@ int32_t Qmc5883l_Process(Qmc5883l *qmc5883l)
         magicy = qmc5883l->reg.y_msb << 8 | qmc5883l->reg.y_lsb;
         magicz = qmc5883l->reg.z_msb << 8 | qmc5883l->reg.z_lsb;
 
-        float magic_range = 2.0;
+        float sensitivity = 12000.0;        // sensitivity defined in datasheet
         switch (qmc5883l->range)
         {
             case Qmc5883lRange_2gauss:
-                magic_range = 2.0;
+                sensitivity = 12000.0;
                 break;
             case Qmc5883lRange_8gauss:
-                magic_range = 8.0;
+                sensitivity = 3000.0;
                 break;
             case Qmc5883lRange_reserve:
-                magic_range = 2.0;
+                sensitivity = 12000.0;
+                break;
+            default:
                 break;
         }
-        qmc5883l->axise.x = magicx * magic_range / 32768.0f;
-        qmc5883l->axise.y = magicy * magic_range / 32768.0f;
-        qmc5883l->axise.z = magicz * magic_range / 32768.0f;
+        qmc5883l->axise.x = magicx / sensitivity;
+        qmc5883l->axise.y = magicy / sensitivity;
+        qmc5883l->axise.z = magicz / sensitivity;
     }
     else
     {
-        // do nothing
+        qmc5883l->axise.x = 0.0;
+        qmc5883l->axise.y = 0.0;
+        qmc5883l->axise.z = 0.0;
     }
 }
 
