@@ -15,6 +15,8 @@
 extern "C" {
 #endif
 
+#define QMC5883L_ADDR   0x0D
+
 typedef enum {
     Qmc5883lMode_Standby    = 0,
     Qmc5883lMode_Continuous = 1,
@@ -93,7 +95,6 @@ typedef struct Qmc5883lAxise {
 
 typedef struct Qmc5883l_ {
     Qmc5883lReg reg;
-    uint8_t addr;
     Qmc5883lRate sample_rate;
     Qmc5883lOverSampleRatio ov_ratio;
     Qmc5883lMode mode;

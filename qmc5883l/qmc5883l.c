@@ -4,7 +4,7 @@
  * @brief 
  * @copyright Copyright (c) 2025
  */
- 
+
 #include "qmc5883l.h"
 
 void Qmc5883l_Register(Qmc5883l *qmc5883l, int32_t (*read)(uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len), \
@@ -57,41 +57,41 @@ bool Qmc5883l_Set(Qmc5883l *qmc5883l, Qmc5883lCmd cmd, uint8_t data)
         {
         case Qmc5883lCmd_Mode:
             qmc5883l->reg.control.mode = data;
-            ret = qmc5883l->i2c_write(qmc5883l->addr, 0x09, (uint8_t *)&qmc5883l->reg.control, 1);
+            ret = qmc5883l->i2c_write(QMC5883L_ADDR, 0x09, (uint8_t *)&qmc5883l->reg.control, 1);
             break;
         case Qmc5883lCmd_DataRate:
             qmc5883l->reg.control.odr = data;
-            ret = qmc5883l->i2c_write(qmc5883l->addr, 0x09, (uint8_t *)&qmc5883l->reg.control, 1);
+            ret = qmc5883l->i2c_write(QMC5883L_ADDR, 0x09, (uint8_t *)&qmc5883l->reg.control, 1);
             break;
         case Qmc5883lCmd_FullScall:
             qmc5883l->reg.control.rng = data;
-            ret = qmc5883l->i2c_write(qmc5883l->addr, 0x09, (uint8_t *)&qmc5883l->reg.control, 1);
+            ret = qmc5883l->i2c_write(QMC5883L_ADDR, 0x09, (uint8_t *)&qmc5883l->reg.control, 1);
             break;
         case Qmc5883lCmd_OverSampleRate:
             qmc5883l->reg.control.osr = data;
-            ret = qmc5883l->i2c_write(qmc5883l->addr, 0x09, (uint8_t *)&qmc5883l->reg.control, 1);
+            ret = qmc5883l->i2c_write(QMC5883L_ADDR, 0x09, (uint8_t *)&qmc5883l->reg.control, 1);
             break;
         case Qmc5883lCmd_Reset:
             qmc5883l->reg.control2.soft_reset = data;
-            ret = qmc5883l->i2c_write(qmc5883l->addr, 0x0A, (uint8_t *)&qmc5883l->reg.control2, 1);
+            ret = qmc5883l->i2c_write(QMC5883L_ADDR, 0x0A, (uint8_t *)&qmc5883l->reg.control2, 1);
             break;
         case Qmc5883lCmd_ResetPeriod:
             qmc5883l->reg.reset_period = data;
-            ret = qmc5883l->i2c_write(qmc5883l->addr, 0x0B, (uint8_t *)&qmc5883l->reg.reset_period, 1);
+            ret = qmc5883l->i2c_write(QMC5883L_ADDR, 0x0B, (uint8_t *)&qmc5883l->reg.reset_period, 1);
             break;
         case Qmc5883lCmd_RolPnt:
             qmc5883l->reg.control2.rol_pnt = data ? 1 : 0;
-            ret = qmc5883l->i2c_write(qmc5883l->addr, 0x0A, (uint8_t *)&qmc5883l->reg.control2, 1);
+            ret = qmc5883l->i2c_write(QMC5883L_ADDR, 0x0A, (uint8_t *)&qmc5883l->reg.control2, 1);
             break;
         case Qmc5883lCmd_InterruptEnable:
             qmc5883l->reg.control2.int_enable = data ? 1 : 0;
-            ret = qmc5883l->i2c_write(qmc5883l->addr, 0x0A, (uint8_t *)&qmc5883l->reg.control2, 1);
+            ret = qmc5883l->i2c_write(QMC5883L_ADDR, 0x0A, (uint8_t *)&qmc5883l->reg.control2, 1);
             break;
         case Qmc5883lCmd_ChipId:
-            ret = qmc5883l->i2c_read(qmc5883l->addr, 0x0D, (uint8_t *)&qmc5883l->reg.chip_id, 1);
+            ret = qmc5883l->i2c_read(QMC5883L_ADDR, 0x0D, (uint8_t *)&qmc5883l->reg.chip_id, 1);
             break;
         case Qmc5883lCmd_ReadStatus:
-            ret = qmc5883l->i2c_read(qmc5883l->addr, 0x06, (uint8_t *)&qmc5883l->reg.status, 8);
+            ret = qmc5883l->i2c_read(QMC5883L_ADDR, 0x06, (uint8_t *)&qmc5883l->reg.status, 8);
             break;
         default:
             ret = 0;
@@ -110,7 +110,7 @@ int32_t Qmc5883l_Process(Qmc5883l *qmc5883l)
     if (qmc5883l && qmc5883l->inited)
     {
         int16_t magicx, magicy, magicz;
-        qmc5883l->i2c_read(qmc5883l->addr, 0x00, (uint8_t *)&qmc5883l->reg, 6);
+        qmc5883l->i2c_read(QMC5883L_ADDR, 0x00, (uint8_t *)&qmc5883l->reg, 6);
         magicx = qmc5883l->reg.x_msb << 8 | qmc5883l->reg.x_lsb;
         magicy = qmc5883l->reg.y_msb << 8 | qmc5883l->reg.y_lsb;
         magicz = qmc5883l->reg.z_msb << 8 | qmc5883l->reg.z_lsb;
