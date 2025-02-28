@@ -7,13 +7,6 @@
 #include <string.h>
 #include "imu.h"
 
-#define DBG_SECTION_NAME "imu"
-#define DBG_COLOR
-#define DBG_LEVEL DBG_LOG
-#include <rtdbg.h>
-
-#define print(...)             rt_kprintf(__VA_ARGS__)
-
 static inline double Imu_NormalizeAngle(float_t angle)
 {
     return (angle > MATH_PI) ? angle - MATH_2PI : (angle < -MATH_PI) ? angle + MATH_2PI : angle;
@@ -78,16 +71,8 @@ void Imu_Update(Imu *imu)
     {
         // do nothing
     }
-
     Imu_ConvertQuatToEuler(imu);
     Imu_ConvertEuler(imu);
-}
-
-void Imu_InitCalibrate(Imu *imu)
-{
-    memset((void *)&imu->bias, 0, sizeof(ImuCalib));
-    imu->calibrate_count = 0;
-    imu->state = ImuStateCalib;
 }
 
 void Imu_CalibrateGyro(Imu *imu)
@@ -112,9 +97,9 @@ void Imu_CalibrateMagic(Imu *imu)
 }
 
 // IMU 误差模型 Ameas = S * (Atrue + OFFSET)
-void Imu_CalibrateAccelBias(Imu3Axes *src, int32_t samples, Imu3Axes *bias)
+void Imu_CalibrateAccelBias(ImuAxes *src, int32_t samples, ImuAxes *bias)
 {
-    Imu3Axes sum = {0.0, 0.0, 0.0};
+    ImuAxes sum = {0.0, 0.0, 0.0};
     for (int32_t i = 0; i < samples; i++)
     {
         sum.x += src[i].x;
@@ -127,9 +112,9 @@ void Imu_CalibrateAccelBias(Imu3Axes *src, int32_t samples, Imu3Axes *bias)
     bias->z = sum.z / samples - GRAVITY;
 }
 
-void Imu_CalibrateAccelScale(Imu3Axes *src, int32_t samples, Imu3Axes *scale)
+void Imu_CalibrateAccelScale(ImuAxes *src, int32_t samples, ImuAxes *scale)
 {
-    Imu3Axes sum = {0.0, 0.0, 0.0};
+    ImuAxes sum = {0.0, 0.0, 0.0};
     for (int32_t i = 0; i < samples; i++)
     {
         sum.x += src[i].x * src[i].x;
@@ -161,6 +146,25 @@ void Imu_CalibrateAccel(Imu *imu)
         Imu_CalibrateAccelBias(imu->bias.acc_src, IMU_CALIBRATE_TIMES, &imu->bias.accel_offset);
         Imu_CalibrateAccelScale(imu->bias.acc_src, IMU_CALIBRATE_TIMES, &imu->bias.accel_s);
     }
+}
+
+void Imu_InitCalibrate(Imu *imu)
+{
+//    memset((void *)&imu->bias, 0, sizeof(ImuCalib));
+    imu->calibrate_count = 0;
+    imu->state = ImuStateCalib;
+    imu->bias.gyro.x = 0.0;
+    imu->bias.gyro.y = 0.0;
+    imu->bias.gyro.z = 0.0;
+    imu->bias.magic.x = 0.0;
+    imu->bias.magic.y = 0.0;
+    imu->bias.magic.z = 0.0;
+    imu->bias.accel_offset.x = 0.0;
+    imu->bias.accel_offset.y = 0.0;
+    imu->bias.accel_offset.z = 0.0;
+    imu->bias.accel_s.x = 1.0;
+    imu->bias.accel_s.y = 1.0;
+    imu->bias.accel_s.z = 1.0;
 }
 
 void Imu_Calibrate(Imu *imu)

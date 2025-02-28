@@ -16,7 +16,7 @@
 #define GRAVITY                 (9.81)
 #define DEGREE2RAD(x)           ((x) * MATH_PI / 180.0)
 #define RAD2DEGREE(x)           ((x) * 180.0 / MATH_PI)
-#define IMU_CALIBRATE_TIMES     200
+#define IMU_CALIBRATE_TIMES     500
 
 typedef enum {
     ImuMadgwick = 1,
@@ -31,55 +31,19 @@ typedef enum {
     ImuStateCalib      = 4
 }ImuState;
 
-typedef enum {
-    ImuSetGyroRange  = 0,
-    ImuSetAccelRange = 1,
-    ImuSetDlpf       = 2,
-    ImuSetSampleRate = 3,
-    ImuSetSleep      = 4
-}ImuConfigCmd;
-
-typedef enum {
-    ImuGyroRange_250DPS  = 250,
-    ImuGyroRange_500DPS  = 500,
-    ImuGyroRange_1000DPS = 1000,
-    ImuGyroRange_2000DPS = 2000
-} ImuGyroRange;
-
-typedef enum {
-    ImuAccelRange_2G  = 2,
-    ImuAccelRange_4G  = 4,
-    ImuAccelRange_8G  = 8,
-    ImuAccelRange_16G = 18
-} ImuAccelRange;
-
-typedef enum {
-    ImuDlpf_Disable = 0,
-    ImuDlpf_188HZ   = 1,
-    ImuDlpf_98HZ    = 2,
-    ImuDlpf_42HZ    = 3,
-    ImuDlpf_20HZ    = 4,
-    ImuDlpf_10HZ    = 5,
-    ImuDlpf_5HZ     = 6,
-} ImuDlpf;
-
-typedef struct Imu3Axes_ {
+typedef struct ImuAxes_ {
     volatile float x;
     volatile float y;
     volatile float z;
-}Imu3Axes;
-
-typedef struct ImuConfig_ {
-    ImuAccelRange accel_range;
-    ImuGyroRange gyro_range;
-    ImuDlpf dlpf;
-    uint32_t resolution;
-}ImuConfig;
+}ImuAxes;
 
 typedef struct ImuSource_ {
-    Imu3Axes accel;         // m/s2
-    Imu3Axes gyro;          // rad/s
-    Imu3Axes magic;         // Gauss
+    ImuAxes accel;         // m/s2
+    ImuAxes gyro;          // rad/s
+    ImuAxes magic;         // Gauss
+    float accel_temperature;
+    float gyro_temperature;
+    float magic_temperature;
     bool use_magic;
 }ImuSource;
 
@@ -98,11 +62,11 @@ typedef struct ImuQuaternion_ {
 
 // Ameas = S * (Atrue + OFFSET), 静止条件下最小二乘法校准参数
 typedef struct ImuCalib_ {
-    Imu3Axes acc_src[IMU_CALIBRATE_TIMES];
-    Imu3Axes accel_s;
-    Imu3Axes accel_offset;
-    Imu3Axes gyro;          // rad/s
-    Imu3Axes magic;         // Gauss
+    ImuAxes acc_src[IMU_CALIBRATE_TIMES];
+    ImuAxes accel_s;
+    ImuAxes accel_offset;
+    ImuAxes gyro;          // rad/s
+    ImuAxes magic;         // Gauss
 }ImuCalib;
 
 typedef struct Imu_ Imu;
@@ -111,7 +75,6 @@ struct Imu_ {
     ImuMethod method;           // 滤波方法
     ImuSource source;           // 源数据
     ImuCalib bias;          //初始值校准
-    ImuConfig imu_config;       // 芯片配置项
     ImuQuaternion quaternion;   // 四元数
     ImuEuler raw_euler;         // 欧拉角 rad
     ImuEuler raw_euler_degree;  // 欧拉角 degree
