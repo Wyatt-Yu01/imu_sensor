@@ -100,7 +100,7 @@ typedef struct Qmc5883l_ {
     Qmc5883l_I2cMemFunc read;
     Qmc5883l_I2cMemFunc write;
 
-    uint16_t raw_data[3];
+    int16_t raw_data[3];
     Qmc5883lAxes axes;
     float temperature;
     bool inited;

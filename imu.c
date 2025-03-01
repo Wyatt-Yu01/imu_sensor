@@ -55,6 +55,7 @@ void Imu_Update(Imu *imu)
     imu->source.magic.x -= imu->bias.magic.x;
     imu->source.magic.y -= imu->bias.magic.y;
     imu->source.magic.z -= imu->bias.magic.z;
+#if 1
     if (ImuMadgwick == imu->method)
     {
         ImuMadgwick_AlgorithmUpdate(imu);
@@ -71,6 +72,7 @@ void Imu_Update(Imu *imu)
     {
         // do nothing
     }
+#endif
     Imu_ConvertQuatToEuler(imu);
     Imu_ConvertEuler(imu);
 }
@@ -182,9 +184,11 @@ void Imu_Calibrate(Imu *imu)
     {
         imu->calibrate_count = 0;
         imu->state = ImuStateStart;
+#if 0
         LOG_D("Calibrate results: \n accel_bias: %f, %f, %f\n accel_scale: %f, %f, %f\n, gyro: %f, %f, %f", \
                 imu->bias.accel_offset.x, imu->bias.accel_offset.y, imu->bias.accel_offset.z, \
                 imu->bias.accel_s.x, imu->bias.accel_s.y, imu->bias.accel_s.z, \
                 imu->bias.gyro.x, imu->bias.gyro.y, imu->bias.gyro.z);
+#endif
     }
 }

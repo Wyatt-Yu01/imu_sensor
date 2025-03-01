@@ -132,9 +132,9 @@ bool Qmc5883l_Read(Qmc5883l *qmc5883l, Qmc5883lAxes *axes)
             default:
                 break;
         }
-        qmc5883l->axes.x = (buffer[0] | (buffer[1] << 8)) / sensitivity;
-        qmc5883l->axes.y = (buffer[2] | (buffer[3] << 8)) / sensitivity;
-        qmc5883l->axes.z = (buffer[4] | (buffer[5] << 8)) / sensitivity;
+        qmc5883l->axes.x = ((int16_t)(buffer[0] | (buffer[1] << 8))) / sensitivity;
+        qmc5883l->axes.y = ((int16_t)(buffer[2] | (buffer[3] << 8))) / sensitivity;
+        qmc5883l->axes.z = ((int16_t)(buffer[4] | (buffer[5] << 8))) / sensitivity;
         ret = true;
     }
     else
