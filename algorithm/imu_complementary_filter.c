@@ -11,7 +11,7 @@ void ImuComplementaryFilter_AlgorithmUpdate(Imu *imu)
 {
     float gyro_pitch = imu->source.gyro.x * imu->comple_filter_alpha;
     float gyro_roll = imu->source.gyro.y * imu->comple_filter_alpha;
-    float gyro_yaw = imu->source.gyro.z * imu->comple_filter_alpha;
+    float gyro_yaw = imu->source.gyro.z * imu->comple_filter_alpha; 
 
     float accel_pitch = atan2f(imu->source.accel.y, imu->source.accel.z);
     float accel_roll = atan2f(-imu->source.accel.x, \

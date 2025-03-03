@@ -74,7 +74,7 @@ struct Imu_ {
     volatile ImuState state;
     ImuMethod method;           // 滤波方法
     ImuSource source;           // 源数据
-    ImuCalib bias;          //初始值校准
+    ImuCalib bias;              //初始值校准
     ImuQuaternion quaternion;   // 四元数
     ImuEuler raw_euler;         // 欧拉角 rad
     ImuEuler raw_euler_degree;  // 欧拉角 degree

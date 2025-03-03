@@ -18,9 +18,12 @@ static void Imu_ConvertEuler(Imu *imu)
     imu->raw_euler_degree.pitch = (float)imu->raw_euler.pitch * 180 / MATH_PI;
     imu->raw_euler_degree.yaw   = (float)imu->raw_euler.yaw * 180 / MATH_PI;
 
-    imu->euler.pitch = (float)Imu_NormalizeAngle(imu->raw_euler.pitch - imu->zero_euler.pitch);
-    imu->euler.roll = (float)Imu_NormalizeAngle(imu->raw_euler.roll - imu->zero_euler.roll);
-    imu->euler.yaw = (float)Imu_NormalizeAngle(imu->raw_euler.yaw - imu->zero_euler.yaw);
+//    imu->euler.pitch = (float)Imu_NormalizeAngle(imu->raw_euler.pitch - imu->zero_euler.pitch);
+//    imu->euler.roll = (float)Imu_NormalizeAngle(imu->raw_euler.roll - imu->zero_euler.roll);
+//    imu->euler.yaw = (float)Imu_NormalizeAngle(imu->raw_euler.yaw - imu->zero_euler.yaw);
+    imu->euler.pitch = imu->raw_euler.pitch - imu->zero_euler.pitch;
+    imu->euler.roll = imu->raw_euler.roll - imu->zero_euler.roll;
+    imu->euler.yaw = imu->raw_euler.yaw - imu->zero_euler.yaw;
 
     imu->euler_degree.roll = (float)(imu->euler.roll * 180 / MATH_PI);
     imu->euler_degree.pitch = (float)(imu->euler.pitch * 180 / MATH_PI);

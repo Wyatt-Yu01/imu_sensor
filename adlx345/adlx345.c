@@ -6,11 +6,6 @@
  */
 
 #include "adlx345.h"
-#include "rtdevice.h"
-#define DBG_SECTION_NAME "adlx"
-#define DBG_COLOR
-#define DBG_LEVEL DBG_LOG
-#include <rtdbg.h>
 
 #define ADLX345_GRAVITY                 (9.81)
 
@@ -78,16 +73,7 @@ void Adlx345_Init(Adlx345 *m)
             }
             format.range = m->range;
 
-#if 0
-            // set sample rate
-            Adlx345RegBwRate bw_rate = {
-                .resvd = 0,
-                .low_power = 0,             // disable low power
-                .rate = m->sample_rate,
-            };      // disable low power mode as default
-#else
             uint8_t bw_rate = m->sample_rate;
-#endif
             uint8_t power_ctrl = 0x08;                  //0B-00-0-0-1-0-00 
             uint8_t data_format = 0x0c | m->range;     // 0B-0-0-0-0-1-1-11     //full-res, left-justify
             m->write(m->addr, ADLX345_REG_POWER_CTL, &power_ctrl, 1);
@@ -95,24 +81,21 @@ void Adlx345_Init(Adlx345 *m)
             if (m->write(m->addr, ADLX345_REG_DATAFORMAT, &data_format, 1) && \
                     m->write(m->addr, ADLX345_REG_BW_RATE, (uint8_t *)&bw_rate, 1))
             {
-                LOG_D("init success");
                 m->inited = true;
             }
             else
             {
-                LOG_D("init failed");
                 m->inited = false;
             }
         }
         else
         {
-            LOG_D("access chip failed");
             m->inited = false;
         }
     }
     else 
     {
-        LOG_D("handler is null");
+        // do nothing 
     }
 }
 
@@ -137,7 +120,6 @@ bool Adlx345_Read(Adlx345 *m, Adlx345Axes *axes)
         }
         else
         {   
-            LOG_E("read data error");
             ret = false;
         }
         

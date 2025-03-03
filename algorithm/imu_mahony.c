@@ -70,10 +70,10 @@ void ImuMahony_AlgorithmUpdate(Imu *imu)
 
             // Compute and apply integral feedback if enabled
             if(imu->ki_gain > 0.0f) {
-                integralFBx += imu->ki_gain * halfex * (1.0f / imu->samp_freq);	// integral error scaled by Ki
-                integralFBy += imu->ki_gain * halfey * (1.0f / imu->samp_freq);
-                integralFBz += imu->ki_gain * halfez * (1.0f / imu->samp_freq);
-                imu->source.gyro.x += integralFBx;	// apply integral feedback
+                integralFBx        += imu->ki_gain * halfex * (1.0f / imu->samp_freq);  // integral error scaled by Ki
+                integralFBy        += imu->ki_gain * halfey * (1.0f / imu->samp_freq);
+                integralFBz        += imu->ki_gain * halfez * (1.0f / imu->samp_freq);
+                imu->source.gyro.x += integralFBx;                                      // apply integral feedback
                 imu->source.gyro.y += integralFBy;
                 imu->source.gyro.z += integralFBz;
             }
@@ -90,19 +90,19 @@ void ImuMahony_AlgorithmUpdate(Imu *imu)
         }
 
         // Integrate rate of change of quaternion
-        imu->source.gyro.x *= (0.5f * (1.0f / imu->samp_freq));		// pre-multiply common factors
+        imu->source.gyro.x *= (0.5f * (1.0f / imu->samp_freq));                                                                // pre-multiply common factors
         imu->source.gyro.y *= (0.5f * (1.0f / imu->samp_freq));
         imu->source.gyro.z *= (0.5f * (1.0f / imu->samp_freq));
-        qa = imu->quaternion.q0;
-        qb = imu->quaternion.q1;
-        qc = imu->quaternion.q2;
+        qa                  = imu->quaternion.q0;
+        qb                  = imu->quaternion.q1;
+        qc                  = imu->quaternion.q2;
         imu->quaternion.q0 += (-qb * imu->source.gyro.x - qc * imu->source.gyro.y - imu->quaternion.q3 * imu->source.gyro.z);
         imu->quaternion.q1 += (qa * imu->source.gyro.x + qc * imu->source.gyro.z - imu->quaternion.q3 * imu->source.gyro.y);
         imu->quaternion.q2 += (qa * imu->source.gyro.y - qb * imu->source.gyro.z + imu->quaternion.q3 * imu->source.gyro.x);
-        imu->quaternion.q3 += (qa * imu->source.gyro.z + qb * imu->source.gyro.y - qc * imu->source.gyro.x); 
+        imu->quaternion.q3 += (qa * imu->source.gyro.z + qb * imu->source.gyro.y - qc * imu->source.gyro.x);
 
-        // Normalise quaternion
-        recipNorm = InvSqrt(imu->quaternion.q0 * imu->quaternion.q0 + imu->quaternion.q1 * imu->quaternion.q1 + imu->quaternion.q2 * imu->quaternion.q2 + imu->quaternion.q3 * imu->quaternion.q3);
+          // Normalise quaternion
+        recipNorm           = InvSqrt(imu->quaternion.q0 * imu->quaternion.q0 + imu->quaternion.q1 * imu->quaternion.q1 + imu->quaternion.q2 * imu->quaternion.q2 + imu->quaternion.q3 * imu->quaternion.q3);
         imu->quaternion.q0 *= recipNorm;
         imu->quaternion.q1 *= recipNorm;
         imu->quaternion.q2 *= recipNorm;
@@ -112,10 +112,10 @@ void ImuMahony_AlgorithmUpdate(Imu *imu)
     {
         if(!((imu->source.accel.x == 0.0f) && (imu->source.accel.y == 0.0f) && (imu->source.accel.z == 0.0f))) {
             // Normalise accelerometer measurement
-            recipNorm = InvSqrt(imu->source.accel.x * imu->source.accel.x + imu->source.accel.y * imu->source.accel.y + imu->source.accel.z * imu->source.accel.z);
+            recipNorm            = InvSqrt(imu->source.accel.x * imu->source.accel.x + imu->source.accel.y * imu->source.accel.y + imu->source.accel.z * imu->source.accel.z);
             imu->source.accel.x *= recipNorm;
             imu->source.accel.y *= recipNorm;
-            imu->source.accel.z *= recipNorm;        
+            imu->source.accel.z *= recipNorm;
 
             // Estimated direction of gravity and vector perpendicular to magnetic flux
             halfvx = imu->quaternion.q1 * imu->quaternion.q3 - imu->quaternion.q0 * imu->quaternion.q2;
@@ -129,10 +129,10 @@ void ImuMahony_AlgorithmUpdate(Imu *imu)
 
             // Compute and apply integral feedback if enabled
             if(imu->ki_gain > 0.0f) {
-                integralFBx += imu->ki_gain * halfex * (1.0f / imu->samp_freq);	// integral error scaled by Ki
-                integralFBy += imu->ki_gain * halfey * (1.0f / imu->samp_freq);
-                integralFBz += imu->ki_gain * halfez * (1.0f / imu->samp_freq);
-                imu->source.gyro.x += integralFBx;	// apply integral feedback
+                integralFBx        += imu->ki_gain * halfex * (1.0f / imu->samp_freq);  // integral error scaled by Ki
+                integralFBy        += imu->ki_gain * halfey * (1.0f / imu->samp_freq);
+                integralFBz        += imu->ki_gain * halfez * (1.0f / imu->samp_freq);
+                imu->source.gyro.x += integralFBx;                                      // apply integral feedback
                 imu->source.gyro.y += integralFBy;
                 imu->source.gyro.z += integralFBz;
             }
@@ -148,17 +148,17 @@ void ImuMahony_AlgorithmUpdate(Imu *imu)
             imu->source.gyro.z += imu->kp_gain * halfez;
         }
 
-        // Integrate rate of change of quaternion
-        imu->source.gyro.x *= (0.5f * (1.0f / imu->samp_freq));		// pre-multiply common factors
+                                                                 // Integrate rate of change of quaternion
+        imu->source.gyro.x *= (0.5f * (1.0f / imu->samp_freq));  // pre-multiply common factors
         imu->source.gyro.y *= (0.5f * (1.0f / imu->samp_freq));
         imu->source.gyro.z *= (0.5f * (1.0f / imu->samp_freq));
-        qa = imu->quaternion.q0;
-        qb = imu->quaternion.q1;
-        qc = imu->quaternion.q2;
+        qa                  = imu->quaternion.q0;
+        qb                  = imu->quaternion.q1;
+        qc                  = imu->quaternion.q2;
         imu->quaternion.q0 += (-qb * imu->source.gyro.x - qc * imu->source.gyro.y - imu->quaternion.q3 * imu->source.gyro.z);
         imu->quaternion.q1 += (qa * imu->source.gyro.x + qc * imu->source.gyro.z - imu->quaternion.q3 * imu->source.gyro.y);
         imu->quaternion.q2 += (qa * imu->source.gyro.y - qb * imu->source.gyro.z + imu->quaternion.q3 * imu->source.gyro.x);
-        imu->quaternion.q3 += (qa * imu->source.gyro.z + qb * imu->source.gyro.y - qc * imu->source.gyro.x); 
+        imu->quaternion.q3 += (qa * imu->source.gyro.z + qb * imu->source.gyro.y - qc * imu->source.gyro.x);
 
         // Normalise quaternion
         recipNorm = InvSqrt(imu->quaternion.q0 * imu->quaternion.q0 + imu->quaternion.q1 * imu->quaternion.q1 + imu->quaternion.q2 * imu->quaternion.q2 + imu->quaternion.q3 * imu->quaternion.q3);
